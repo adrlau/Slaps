@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/weather-icons.min.css">
+    <link rel="font" href="font/weathericons-regular-webfont.eot">
+    <link rel="font" href="font/weathericons-regular-webfont.swg">
+    <link rel="font" href="font/weathericons-regular-webfont.woff">
+    <link rel="font" href="font/weathericons-regular-webfont.woff2">
+    <link rel="font" href="font/weathericons-regular-webfont.ttf">
+    <title>slaps</title>
+
+    <!-- comment in html -->
+    <style>
+        body {
+            background-color: rgb(241, 206, 160);
+        }
+
+        #temperature {
+            width: 70%;
+            padding: 0;
+            border: 2px solid rgb(126, 62, 16);
+            border-radius: 5px;
+            color: rgb(126, 62, 16);
+            text-align: center;
+        }
+
+        #description {
+            width: 70%;
+            padding: 0;
+            border: 2px solid rgb(126, 62, 16);
+            border-radius: 5px;
+            color: rgb(126, 62, 16);
+            text-align: center;
+
+        }
+
+        #hours {
+            width: 70%;
+            padding: 0;
+            border: 2px solid rgb(126, 62, 16);
+            border-radius: 5px;
+            color: rgb(126, 62, 16);
+            text-align: center;
+
+        }
+
+        #weatherIcon {
+            width: 23%;
+            padding: 2px;
+            border: 2px solid rgb(126, 62, 16);
+            border-radius: 5px;
+            color: rgb(126, 62, 16);
+            text-align: center;
+
+        }
+
+        #weatherIcon2 {
+            width: 23%;
+            padding: 2px;
+            border: 2px solid rgb(126, 62, 16);
+            border-radius: 5px;
+            color: rgb(126, 62, 16);
+            text-align: center;
+
+        }
+
+        #weatherIcon3 {
+            width: 23%;
+            padding: 2px;
+            border: 2px solid rgb(126, 62, 16);
+            border-radius: 5px;
+            color: rgb(126, 62, 16);
+            text-align: center;
+
+        }
+
+        p {
+            font-family: verdana;
+            font-size: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <input id="inpLocation" placeholder="eks London,uk" type="text" name="city">
+    <button id="btnL">go</button>
+    <button id="btnAutoL">auto locate</button>
+    <h1 id="temperature">x°C</h1>
+    <canvas id="canvas" width="250" height="90"></canvas>
+    <h2 id="description">weather type</h2>
+    <h2 id="hours">1h 6h 12h</h2>
+    <i id="weatherIcon" class="wi wi-day-sunny"></i>
+    <i id="weatherIcon2" class="wi wi-day-sunny"></i>
+    <i id="weatherIcon3" class="wi wi-day-sunny"></i>
+    <p id="clothes">clothes to wear</p>
+    <p id="location"></p>
+    <p id="txt"></p>
+
+    <script>
+        var inpLocation = document.getElementById("inpLocation");
+        var btnL = document.getElementById("btnL");
+        var btnAutoL = document.getElementById("btnAutoL");
+        var weatherIcon = document.getElementById("weatherIcon");
+        var weatherIcon2 = document.getElementById("weatherIcon2");
+        var weatherIcon3 = document.getElementById("weatherIcon3");
+        var clothes = document.getElementById("clothes");
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext("2d");
+        //på startupp tegne inn grunnleggende sirkel til vindmåler
+        var r = 40;
+        var xPos = (r / 2) + 30;
+        var yPos = (r / 2) + 25;
+        ctx.translate(xPos, yPos);
+        var xPos = +r + 30;
+        var yPos = -r + 30;
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "#7e3e10";
+        ctx.fillStyle = "#7e3e10";
+        ctx.font = "30px Arial";
+        ctx.fillText("Wind:", xPos, yPos);
+        ctx.fillText("x  m/s", xPos, yPos + 30);
+
+        var xPos = 0;
+        var yPos = 0;
+
+
+        ctx.font = "20px Comic Sans MS";
+        ctx.fillText("N", -7, -r + 20);
+        ctx.fillText("S", -7, r - 5);
+        ctx.fillText("E", r - 20, +5);
+        ctx.fillText("W", -r + 5, +5);
+        ctx.beginPath();
+        ctx.arc(xPos, yPos, r, Math.PI / 180 * 0, Math.PI / 180 * 360);
+        ctx.stroke();
+
+
+
+
+        //reagerer når en trykker på en knapp
+        //reagerer på  enter eller tab
+        inpLocation.onchange = function () {
+            cityWeather()
+
+        }
+        btnL.onclick = function () {
+            cityWeather()
+        }
+
+        function cityWeather() {
+            var location = "?q=" + inpLocation.value;
+            console.log(location)
+            console.log(inpLocation.value)
+
+            if (location != "?q=") {
+                getWeather(location);
+            } else {
+
+            }
+        }
+
+        btnAutoL.onclick = function () {
+
+            var position = "?lat=0&lon=0";
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition);
+            } else {
+                position = "?lat=0&lon=0";
+                return position;
+            }
+            console.log(position)
+        }
+        function showPosition(position) {
+            position = "?lat=" + position.coords.latitude +
+                "&lon=" + position.coords.longitude;
+            console.log(position)
+            getWeather(position);
+            return position;
+        }
+
+        var mainData = ["no_data"];
+
+        function cb(data) {
+            mainData.push(data)
+            //console.log(data);
+            console.log(mainData);
+
+            var temperature = document.getElementById("temperature");
+            var description = document.getElementById("description");
+            var location = document.getElementById("location");
+
+            if (mainData[mainData.length - 1] === "error") {
+                inpLocation.value = "";
+                inpLocation.placeholder = "invalid city name";
+            } else if (mainData != "no_data") {
+                getMet(mainData[mainData.length - 1])
+
+
+
+                var temp = (Math.round((mainData[mainData.length - 1].main.temp - 273.15) * 10) / 10);
+                temperature.innerHTML = temp + "°C";
+                location.innerHTML = mainData[mainData.length - 1].name + "(lat-" + mainData[mainData.length - 1].coord.lat + ", lon" + mainData[mainData.length - 1].coord.lon + ")";
+                description.innerHTML = "Weather:" + mainData[mainData.length - 1].weather[0].main + "";
+                //description.innerHTML += "- wind:" + mainData[mainData.length - 1].wind.speed + "m/s";
+
+                //weatherIcon.className = "wi wi-day-sunny";
+                //var iconName = mainData[mainData.length - 1].weather[0].icon;
+                //console.log(iconName);
+                //weatherIcon2.className = "wi-owm-" + iconName;
+            }
+
+            /*windmåler
+            var xPos = 50;
+            var yPos = 50;
+            var r = 20;
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = "Red";
+            ctx.arc(xPos, yPos, r, Math.PI / 180 * 0, Math.PI / 180 * 360);
+            ctx.stroke();
+            */
+
+        }
+
+
+
+
+
+
+        var hourData = ["no_data2"]
+
+        function cb2(data2) {
+            hourData.push(data2)
+            //console.log(data);
+            console.log(hourData);
+        }
+
+
+
+
+        var metData = ["no_data3"]
+
+        function cb3(data3) {
+            metData.push(data3)
+            //console.log(data);
+            console.log(metData);
+
+
+
+            if (metData[metData.length - 1] !== "error3") {
+
+
+
+                //keep uncomented in scandinavian regions
+                var temp = metData[metData.length - 1].properties.timeseries[0].data.instant.details.air_temperature;
+                temperature.innerHTML = temp + "°C";
+
+                //description.innerHTML += "- wind:" + windSpeed + "m/s";
+                var windSpeed = metData[metData.length - 1].properties.timeseries[0].data.instant.details.wind_speed;
+                //hvor vinden kommer fra gjordt om til radianer     
+                var WindDirectionR = ((metData[metData.length - 1].properties.timeseries[0].data.instant.details.wind_from_direction + 180) / 180) * Math.PI;
+                var WindDirection = metData[metData.length - 1].properties.timeseries[0].data.instant.details.wind_from_direction;
+
+                //renser canvaset i tilfelle en har sett opp ett sted tidligere
+                ctx.clearRect(-500, -500, 1000, 1000);
+
+                var r = 40;
+                var xPos = +r + 30;
+                var yPos = -r + 30;
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = "#7e3e10";
+                ctx.fillStyle = "#7e3e10";
+                ctx.font = "30px Arial";
+                ctx.fillText("Wind:", xPos, yPos);
+                ctx.fillText(windSpeed, xPos, yPos + 30);
+                ctx.fillText("m/s", xPos + (((Math.floor(windSpeed / 10) + 1) * 20) + 30), yPos + 30);
+
+                var xPos = 0;
+                var yPos = 0;
+
+
+                ctx.font = "20px Comic Sans MS";
+                ctx.fillText("N", -7, -r + 20);
+                ctx.fillText("S", -7, r - 5);
+                ctx.fillText("E", r - 20, +5);
+                ctx.fillText("W", -r + 5, +5);
+                ctx.beginPath();
+                ctx.arc(xPos, yPos, r, Math.PI / 180 * 0, Math.PI / 180 * 360);
+                ctx.stroke();
+                console.log(WindDirection)
+                ctx.beginPath();
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = "Black";
+                var extr = -5; //modifier for arrow lenght
+                if (windSpeed <= 10 && windSpeed >= 3) {
+                    ctx.lineWidth = windSpeed
+                    ctx.moveTo(xPos, yPos);
+                    ctx.lineTo(((Math.cos(WindDirectionR)) * (r + extr)), ((Math.sin(WindDirectionR)) * (-r - extr)));
+                    /*
+                    //ma ta hensyn til +- variasjoner men venter litt med å gjøre det
+                    ctx.lineTo(((Math.cos(WindDirectionR)) * (r + extr)) - (windSpeed * 3), ((Math.sin(WindDirectionR)) * (-r - extr)));
+                    ctx.moveTo(((Math.cos(WindDirectionR)) * (r + extr)), ((Math.sin(WindDirectionR)) * (-r - extr)));
+                    ctx.lineTo(((Math.cos(WindDirectionR)) * (r + extr)), ((Math.sin(WindDirectionR)) * (-r - extr)) - (windSpeed * 3));
+                    */
+                } else if (windSpeed < 3) {
+                    ctx.lineWidth = 3
+                    ctx.moveTo(xPos, yPos);
+                    ctx.lineTo(((Math.cos(WindDirectionR)) * (r + extr)), ((Math.sin(WindDirectionR)) * (-r - extr)));
+                    /*
+                    //ma ta hensyn til +- variasjoner men venter litt med å gjøre det
+                    ctx.lineTo(((Math.cos(WindDirectionR)) * (r + extr)) - (3), ((Math.sin(WindDirectionR)) * (-r - extr)));
+                    ctx.moveTo(((Math.cos(WindDirectionR)) * (r + extr)), ((Math.sin(WindDirectionR)) * (-r - extr)));
+                    ctx.lineTo(((Math.cos(WindDirectionR)) * (r + extr)), ((Math.sin(WindDirectionR)) * (-r - extr)) - (3));
+                    */
+                } else {
+                    ctx.lineWidth = 10
+                    ctx.moveTo(xPos, yPos);
+                    ctx.lineTo(((Math.cos(WindDirectionR)) * (r + extr)), ((Math.sin(WindDirectionR)) * (-r - extr)));
+                    /*
+                    //ma ta hensyn til +- variasjoner men venter litt med å gjøre det
+                    ctx.lineTo(((Math.cos(WindDirectionR)) * (r + extr)) - (10 * 3), ((Math.sin(WindDirectionR)) * (-r - extr)));
+                    ctx.moveTo(((Math.cos(WindDirectionR)) * (r + extr)), ((Math.sin(WindDirectionR)) * (-r - extr)));
+                    ctx.lineTo(((Math.cos(WindDirectionR)) * (r + extr)), ((Math.sin(WindDirectionR)) * (-r - extr)) - (10 * 3));
+                    */
+                }
+                ctx.stroke();
+
+
+
+
+                var weather = metData[metData.length - 1].properties.timeseries[0].data.next_1_hours.summary.symbol_code;
+                description.innerHTML = "Weather: " + weather + "";
+
+
+
+                //weather icons
+                var iconNames = [
+                    "clearsky",
+                    "cloudy",
+                    "fair",
+                    "fog",
+                    "heavyrain",
+                    "heavyrainshowersandthunder",
+                    "heavysleet",
+                    "heavysleetandthunder",
+                    "heavysleetshowers",
+                    "heavysleetshowersandthunder",
+                    "lightrain",
+                    "lightrainandthunder",
+                    "lightrainshowers",
+                    "lightrainshowersandthunder",
+                    "lightsleet",
+                    "lightsleetandthunder",
+                    "lightsleetshowers",
+                    "lightsnow",
+                    "lightsnowandthunder",
+                    "lightsnowshowers",
+                    "lightssleetshowersandthunder",
+                    "lightssnowshowersandthunder",
+                    "partlycloudy",
+                    "rain",
+                    "rainandthunder",
+                    "rainshowers",
+                    "rainshowersandthunder",
+                    "sleet",
+                    "sleetandthunder",
+                    "sleetshowers",
+                    "sleetshowersandthunder",
+                    "snow",
+                    "snowandthunder",
+                    "snowshowers",
+                    "snowshowersandthunder"]
+
+                var iconNumber = iconNames.indexOf(metData[metData.length - 1].properties.timeseries[0].data.next_1_hours.summary.symbol_code.split('_')[0]);
+                var iconNumber2 = iconNames.indexOf(metData[metData.length - 1].properties.timeseries[6].data.next_1_hours.summary.symbol_code.split('_')[0]);
+                var iconNumber3 = iconNames.indexOf(metData[metData.length - 1].properties.timeseries[12].data.next_1_hours.summary.symbol_code.split('_')[0]);
+
+                var iconValues = [
+                    "wi-day-sunny",
+                    "wi-cloudy",
+                    "wi-day-cloudy",
+                    "wi-fog",
+                    "wi-rain",
+                    "wi-thunderstorm",
+                    "wi-sleet",
+                    "wi-day-sleet-storm",
+                    "wi-rain-wind",
+                    "wi-storm-showers",
+                    "wi-rain-mix",
+                    "wi-storm-showers",
+                    "wi-rain",
+                    "wi-storm-showers",
+                    "wi-sleet",
+                    "wi-day-sleet-storm",
+                    "wi-sleet",
+                    "wi-snow",
+                    "wi-day-snow-thunderstorm",
+                    "wi-snow",
+                    "wi-sleet-storm",
+                    "wi-sleet-storm",
+                    "wi-cloud",
+                    "wi-rain-mix",
+                    "wi-storm-showers",
+                    "wi-rain",
+                    "wi-storm-showers",
+                    "wi-sleet",
+                    "wi-day-sleet-storm",
+                    "wi-sleet",
+                    "wi-sleet-storm",
+                    "wi-snow",
+                    "wi-sleet-storm",
+                    "wi-snow",
+                    "wi-sleet-storm"]
+
+
+
+
+                var weatherIcon = document.getElementById("weatherIcon");
+                var weatherIcon2 = document.getElementById("weatherIcon2");
+                var weatherIcon3 = document.getElementById("weatherIcon3");
+
+                console.log(iconValues[iconNumber]);
+
+                weatherIcon.className = "wi " + iconValues[iconNumber];
+                weatherIcon2.className = "wi " + iconValues[iconNumber2];
+                weatherIcon3.className = "wi " + iconValues[iconNumber3];
+
+                clothes.innerHTML = "clothes:"
+
+                if (temp >= 12) {
+                    clothes.innerHTML += " tshirt,"
+
+                }
+                if (temp < 15 && temp > 0) {
+                    clothes.innerHTML += " hoodie,"
+                } else {
+                    //clothes.innerHTML += " Jacket,"
+                }
+
+                if (wordInString(weatherIcon, "rain ") === true || weather == "rainshowers") {
+                    clothes.innerHTML += " raincoat,"
+
+                }
+
+                if (wordInString(weatherIcon, "snø") === true && temp <= 5) {
+                    clothes.innerHTML += " WinterJacket,"
+                }
+
+
+
+
+            }
+
+
+        }
+
+
+        //sjekker 2 variabler mot hverandre og sjekker om den 2 er tilstede i den første
+        function wordInString(input, input2) {
+            string = String(input);
+            word = String(input2);
+            var bool = false;
+            for (let i = 0; i < string.length - 1; i++) {
+                if (string[i] === word[0]); {
+                    for (let j = 0; j < word.length; j++) {
+                        if (string[i + j] !== word[j]) {
+                            bool = false;
+                            break;
+                        } else if (string[(i + j)] === word[j] && j == word.length - 1) {
+                            bool = true;
+                            //kunne også returnert j for å finne indexen til første forekomst
+                            return bool;
+                        }
+                    }
+                }
+            }
+            console.log("string compare" + bool)
+            return bool;
+        }
+
+
+
+        //const funNavn = (params) => {
+
+        //}
+
+        function getWeather(position) {
+
+            let api = "https://api.openweathermap.org/data/2.5/weather";
+            let apiKey = "29ade5cab5d820f9b4dbef81369c984a";
+
+            //api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={your api key}
+            let url =
+                api +
+                position +
+                "&appid=" +
+                apiKey;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    cb(data);
+                }).catch((error) => {
+                    console.error('Error1:', error);
+                    cb("error");
+                });
+
+            let api2 = "https://api.openweathermap.org/data/2.5/forecast";
+            let apiKey2 = "29ade5cab5d820f9b4dbef81369c984a";
+
+            //eneste fremtids beregning som er gratis er 3 timer i 5 dager. sa jeg vil se pa alle typer klear og sa ta vekk de som er like og si hvilke vi star igjenn med til 24t
+            //api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={your api key}
+            let url2 =
+                api2 +
+                position +
+                "&appid=" +
+                apiKey2;
+
+            fetch(url2)
+                .then(response => response.json())
+                .then(data => {
+                    cb2(data);
+                }).catch((error) => {
+                    console.error('Error2:', error);
+                    cb2("error2");
+                });
+
+        }
+
+        function getMet(mainData) {
+            //ved a bruke pos fra wethermap er presisjonen ned men enklere dersom by er skrevet inn å ikke ha for mange ifs
+            latit = mainData.coord.lat;
+            longit = mainData.coord.lon;
+            // https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=60.10&lon=9.58                       
+            var api3 = "https://api.met.no/weatherapi/locationforecast/2.0/compact"
+            let urlMet =
+                api3 +
+                "?lat=" +
+                latit +
+                "&lon=" +
+                longit;
+
+            fetch(urlMet)
+                .then(response => response.json())
+                .then(data3 => {
+                    console.log(data3)
+                    cb3(data3);
+                }).catch((error) => {
+                    console.error('Error3:', error);
+                    cb3("error3");
+                });
+
+        }
+
+
+    </script>
+</body>
+
+</html>
